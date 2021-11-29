@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/little voice.wav-147dc286281fff947cd29755180a366d.sample"
+
+[deps]
+
+source_file="res://Text Box Preview/SFX/Text Box/Beeps/little voice.wav"
+dest_files=[ "res://.import/little voice.wav-147dc286281fff947cd29755180a366d.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

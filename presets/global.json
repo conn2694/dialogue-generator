@@ -1,0 +1,100 @@
+[
+	{
+		"name": "test",
+		"waves": {
+			"amp": 1.45,
+			"wave": 0,
+			"period": 3.29
+		},
+		"textCrawl": {
+			"speed": 0.01,
+			"lettersAdded": 1,
+			"sound": "#0cowbell_01"
+		},
+		"globalControls": {
+			"narrator": false,
+			"centered": false,
+			"shocked": false,
+			"interrupt": false,
+			"dimmed": false,
+			"prompt": false
+		},
+		"sound_effect": "None",
+		"color": "ffffff",
+		"delay": 0
+	},
+	{
+		"name": "runescape",
+		"waves": {
+			"amp": 0.65,
+			"wave": 10.5,
+			"period": 5.38
+		},
+		"textCrawl": {
+			"speed": 0.05,
+			"lettersAdded": 1,
+			"sound": "growl"
+		},
+		"globalControls": {
+			"narrator": false,
+			"centered": false,
+			"shocked": false,
+			"interrupt": false,
+			"dimmed": false,
+			"prompt": false
+		},
+		"sound_effect": "None",
+		"color": "ffff00",
+		"delay": 0
+	},
+	{
+		"name": "scared narrator",
+		"waves": {
+			"amp": 0.5,
+			"wave": 73,
+			"period": 3.79
+		},
+		"textCrawl": {
+			"speed": 0.01,
+			"lettersAdded": 1,
+			"sound": "02_fluttery"
+		},
+		"globalControls": {
+			"narrator": {
+
+			},
+			"centered": false,
+			"shocked": false,
+			"interrupt": true,
+			"dimmed": false,
+			"prompt": false
+		},
+		"sound_effect": "None",
+		"color": "ffffff",
+		"delay": 0.2
+	},
+	{
+		"name": "whacky halloween",
+		"waves": {
+			"amp": 4.05,
+			"wave": 17.5,
+			"period": 3.29
+		},
+		"textCrawl": {
+			"speed": 0.01,
+			"lettersAdded": 1,
+			"sound": "02_fluttery"
+		},
+		"globalControls": {
+			"narrator": false,
+			"centered": false,
+			"shocked": false,
+			"interrupt": false,
+			"dimmed": false,
+			"prompt": false
+		},
+		"sound_effect": "None",
+		"color": "fa744a",
+		"delay": 0
+	}
+]

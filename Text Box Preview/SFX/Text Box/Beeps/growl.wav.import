@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/growl.wav-48870224db93073d8f23b667f19c34ec.sample"
+
+[deps]
+
+source_file="res://Text Box Preview/SFX/Text Box/Beeps/growl.wav"
+dest_files=[ "res://.import/growl.wav-48870224db93073d8f23b667f19c34ec.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

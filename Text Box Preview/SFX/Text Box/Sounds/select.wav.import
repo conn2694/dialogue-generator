@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/select.wav-5adf4a61eb6e523512140ae0019a1a30.sample"
+
+[deps]
+
+source_file="res://Text Box Preview/SFX/Text Box/Sounds/select.wav"
+dest_files=[ "res://.import/select.wav-5adf4a61eb6e523512140ae0019a1a30.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

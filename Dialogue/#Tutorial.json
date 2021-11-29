@@ -1,0 +1,946 @@
+{
+	"data": {
+		"ObjectName": {
+			"initial": "ObjectName",
+			"pageCount": 26,
+			"ObjectName": {
+				"content": [
+					"Hello! This is a tutorial to show you around the \\nprogram! Hit ctrl+r to play this text",
+					{
+						"divert": "ObjectName 0",
+						"previous": "",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 59,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.55
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 0": {
+				"content": [
+					"There are many settings here, so let\\'s go one at\\na time.",
+					{
+						"divert": "ObjectName 24",
+						"previous": "ObjectName",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 1": {
+				"content": [
+					"What do you want to learn about\\?",
+					{
+						"divert": "ObjectName 23",
+						"previous": "ObjectName 24",
+						"options": [
+							"Waves",
+							"Text Crawl",
+							"Box Options"
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					},
+					{
+						"option": "Waves",
+						"linkpath": "ObjectName op1 2"
+					},
+					{
+						"option": "Text Crawl",
+						"linkpath": "ObjectName op2 3"
+					},
+					{
+						"option": "Box Options",
+						"linkpath": "ObjectName op3 4"
+					}
+				]
+			},
+			"ObjectName op1 2": {
+				"content": [
+					"Waves have 3 controls. Amplitude, Wave Speed, \\nand Period.",
+					{
+						"divert": "ObjectName 5",
+						"previous": "ObjectName 1",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName op2 3": {
+				"content": [
+					"Text Crawl has 3 main settings. Speed, Letters Added,\\nand the Beep Sound. I\\'ll also cover Delay.",
+					{
+						"divert": "ObjectName 8",
+						"previous": "ObjectName 1",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 32,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"speed": 0.07,
+								"pause": 0.4
+							},
+							{
+								"mark": 39,
+								"speed": 0.3,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"chars": 3,
+								"pause": 0.3
+							},
+							{
+								"mark": 62,
+								"sound": "09_robotic",
+								"portraits": {
+
+								},
+								"speed": 0.05,
+								"pause": 0.15
+							},
+							{
+								"mark": 74,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.25
+							}
+						]
+					}
+				]
+			},
+			"ObjectName op3 4": {
+				"content": [
+					"The box icons are listed above the name field.\\nIt can be used for several effects",
+					{
+						"divert": "ObjectName 12",
+						"previous": "ObjectName 1",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 5": {
+				"content": [
+					"The Higher the Amplitude, The more the text waves\\nup and down",
+					{
+						"divert": "ObjectName 6",
+						"previous": "ObjectName op1 2",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"amp": 0.95,
+								"wave": 3,
+								"pi": 3.46
+							},
+							{
+								"mark": 26,
+								"wave": 3,
+								"amp": 3.05,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pi": 1.88
+							},
+							{
+								"mark": 57,
+								"wave": 3,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"amp": 0.15
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 6": {
+				"content": [
+					"The Wave control alters the speed",
+					{
+						"divert": "ObjectName 7",
+						"previous": "ObjectName 5",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"amp": 1.15,
+								"wave": 11.5,
+								"pi": 3
+							},
+							{
+								"mark": 17,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"amp": 1.1,
+								"wave": 44,
+								"pi": 4.21
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 7": {
+				"content": [
+					"And period decides how looooooooooooong the \\nwave should spread out, at 1, it\\'s 2 letters",
+					{
+						"divert": "ObjectName 23",
+						"previous": "ObjectName 6",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 23,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pi": 9.66,
+								"amp": 2.45,
+								"pause": 0.25,
+								"speed": 0.05
+							},
+							{
+								"mark": 40,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.15
+							},
+							{
+								"mark": 80,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"amp": 0.75,
+								"wave": 12.5,
+								"speed": 0.06
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 8": {
+				"content": [
+					"By default, Speed is always at 0.01, as fast as\\nan in game frame, but you can make it looonger",
+					{
+						"divert": "ObjectName 9",
+						"previous": "ObjectName op2 3",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 37,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.25
+							},
+							{
+								"mark": 66,
+								"sound": "02_fluttery",
+								"pause": 0.25,
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 86,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"speed": 0.3,
+								"pause": 0.3
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 9": {
+				"content": [
+					"Letters Added lets you block in words\\nVery fun",
+					{
+						"divert": "ObjectName 10",
+						"previous": "ObjectName 8",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 23,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"chars": 6,
+								"pause": 0.5
+							},
+							{
+								"mark": 29,
+								"chars": 3,
+								"sound": "02_fluttery",
+								"pause": 0.5,
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 32,
+								"chars": 6,
+								"sound": "02_fluttery",
+								"pause": 0.5,
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 38,
+								"sound": "02_fluttery",
+								"pause": 0.5,
+								"portraits": {
+
+								},
+								"speed": 0.03
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 10": {
+				"content": [
+					"You can Change the beep noise at\\nany time",
+					{
+						"divert": "ObjectName 11",
+						"previous": "ObjectName 9",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"speed": 0.03,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 8,
+								"speed": 0.06,
+								"sound": "06_ah",
+								"portraits": {
+
+								},
+								"pause": 0.3
+							},
+							{
+								"mark": 33,
+								"speed": 0.07,
+								"sound": "10_punchy",
+								"portraits": {
+
+								},
+								"pause": 0.05
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 11": {
+				"content": [
+					"The Delay setting lets you- Pause, before \\nany given moment",
+					{
+						"divert": "ObjectName 23",
+						"previous": "ObjectName 10",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"speed": 0.02
+							},
+							{
+								"mark": 28,
+								"speed": 0.06,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.7
+							},
+							{
+								"mark": 35,
+								"speed": 0.03,
+								"sound": "02_fluttery",
+								"pause": 0.5,
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 12": {
+				"content": [
+					"Once thing you can do is...- ",
+					{
+						"interrupt": true,
+						"divert": "ObjectName 13",
+						"previous": "ObjectName op3 4",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 28,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.25
+							},
+							{
+								"mark": 29,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 13": {
+				"content": [
+					"Whoops, one thing you can do is automatically exit\\nthe box with the Interrupt function",
+					{
+						"divert": "ObjectName 14",
+						"previous": "ObjectName 12",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 8,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.3
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 14": {
+				"content": [
+					"You can create a flash like This for something \\nexciting",
+					{
+						"divert": "ObjectName 15",
+						"previous": "ObjectName 13",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 28,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"shock": true,
+								"pause": 0.25,
+								"speed": 0.06
+							},
+							{
+								"mark": 33,
+								"sound": "02_fluttery",
+								"pause": 0.25,
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 15": {
+				"content": [
+					"If you want you can dim the scene at any time",
+					{
+						"divert": "ObjectName 16",
+						"previous": "ObjectName 14",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 37,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"dim": true,
+								"pause": 0.3
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 16": {
+				"content": [
+					"Using prompt will require the users input on\\nthe... marker it\\'s set on",
+					{
+						"divert": "ObjectName 17",
+						"previous": "ObjectName 15",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 48,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"speed": 0.15,
+								"pause": 0.15
+							},
+							{
+								"mark": 52,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"prompt": true
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 17": {
+				"content": [
+					"Centering text isn\\'t that useful imo (and not tested)",
+					{
+						"centered": true,
+						"divert": "ObjectName 18",
+						"previous": "ObjectName 16",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 18": {
+				"content": [
+					"Narration though, that\\'s much more fun",
+					{
+						"narrator": {
+
+						},
+						"divert": "ObjectName 19",
+						"previous": "ObjectName 17",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 19": {
+				"content": [
+					"We can keep the text up on top but update \\ndown here",
+					{
+						"narrator": {
+							"continueNormal": true
+						},
+						"divert": "ObjectName 20",
+						"previous": "ObjectName 18",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 20": {
+				"content": [
+					"We can also clear the top dialogue",
+					{
+						"narrator": {
+							"clearNarration": true,
+							"continueNormal": true
+						},
+						"divert": "ObjectName 21",
+						"previous": "ObjectName 19",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 21": {
+				"content": [
+					"Or clear the bottom",
+					{
+						"narrator": {
+							"clearNormal": true
+						},
+						"divert": "ObjectName 25",
+						"previous": "ObjectName 20",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 22": {
+				"content": [
+					"And then go back to normal",
+					{
+						"divert": "ObjectName 23",
+						"previous": "ObjectName 25",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 23": {
+				"content": [
+					"All options will converge back to this box.\\nChange the hex value on color to have fun.",
+					{
+						"divert": "",
+						"previous": "ObjectName 1",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 44,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"color": "fdcc33"
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 24": {
+				"content": [
+					"Press ctrl+m anywhere in the text to create a\\nmarker. Do it at the same location to delete it",
+					{
+						"divert": "ObjectName 1",
+						"previous": "ObjectName 0",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							},
+							{
+								"mark": 37,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								},
+								"pause": 0.5
+							}
+						]
+					}
+				]
+			},
+			"ObjectName 25": {
+				"content": [
+					"And then we\\'re back to normal after unticking\\nthe option",
+					{
+						"divert": "ObjectName 22",
+						"previous": "ObjectName 21",
+						"options": [
+							"",
+							"",
+							""
+						],
+						"settings": [
+							{
+								"mark": 0,
+								"sound": "02_fluttery",
+								"portraits": {
+
+								}
+							}
+						]
+					}
+				]
+			}
+		}
+	}
+}

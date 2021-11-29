@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/prompt.wav-2c7b93dfc3aa0248a5c20fd407ae8dd0.sample"
+
+[deps]
+
+source_file="res://Text Box Preview/SFX/Text Box/Sounds/prompt.wav"
+dest_files=[ "res://.import/prompt.wav-2c7b93dfc3aa0248a5c20fd407ae8dd0.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

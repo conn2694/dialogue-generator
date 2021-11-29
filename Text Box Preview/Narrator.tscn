@@ -1,0 +1,1133 @@
+[gd_scene load_steps=16 format=2]
+
+[ext_resource path="res://Text Box Preview/Sprites/Fonts/Aero.ttf" type="DynamicFontData" id=3]
+[ext_resource path="res://Text Box Preview/Sprites/Dialogue/Text Boxes/textBoxBlackBox.png" type="Texture" id=4]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Label
+
+
+# SPECIFFIC NARRATION VALUES
+var verticalLoc = 13
+var verticalLocSpecial = 21
+
+var font = preload(\"res://Text Boxes/Aero.tres\")
+var dynamicFont = DynamicFont.new()
+
+
+var waveModulator = 0	# the speed of the sine wave
+var visibleText = 0		# the amount of visible characters at a time,
+						# goes up whenever the timer resets
+var allCharacters = 0	# gets all the characters of a string
+var textSpeedUp = false
+var pageText = {}		# Holds our json info
+						
+var currDialogue
+var currChoices = []
+var linkPath = false
+var optionChoice = 0
+var arrow = null
+var questionBox = null
+# change this to change the position of all the elements in the box
+const QUESTION_BOX_POSITION = Vector2(35, 15)
+var numOfNewLines = 0	# To figure out where to set the y-axis of our arrow
+var storeNewLine = 0
+
+
+# THIS WILL HOLD THE TEXT VALUES WHEN WE HAVE A \"CONTINUE\" VARIABLE IN OUR JSON,
+# WE WILL FIRST STORE THE STRING (ALONG WITH THAT STRINGS SIZE AND IT'S PROPERTIES)
+# EVERYTIME THERE IS A CONTINUE, WE COUNT HOW MANY BLOCKS OF TEXT WE ARE HOLDING
+# THEN IN THE FOR LOOP, WE'LL HAVE AN EMPTY STRING VARIABLE AND ASSIGN IT TO THESE
+# if (
+var textHolding = []
+var textHoldingCount = 0
+						
+	
+var textBoxAniDone = false
+var prematureEnd = false
+var globalDrawText = \"\"		# used for our audio so that blank spaces don't have a sound to them
+
+var textAni = null
+var dialogueSet = \"\"		# takes the dialogue branch we put in newText and stores it so we can specify it all over
+var choicesDone = true		# hack vairable to make sure that once we choose an option that
+							# we don't do the lines of code again, and lets us keep
+							# linkPath for evaluation for once the animation finishes
+var piAmount = 1			# set to 1 so that we don't ever get devision by 0
+var nameBoxNode = null 
+var drawAmp = 0.0
+var waveSpeed
+
+
+## DEFAULT VALUES
+const DEF_SPEED = 0.01
+const DEF_WAVE_SPEED = 0.1
+const DEF_PI = 8
+const DEF_AMP = 0
+const DEF_COLOR = Color(1, 1, 1)
+const DEF_FACE = null
+const DEF_NAME = null
+const DEF_SKIP_BY = 1
+
+var sameName = false
+var sameFace = false
+var currentMarker = 0
+
+# decides wether to stop the player from walking, or if there are other
+# settings like wanting the player to walk while interacting with it or
+# something more speccific for cutscenes.
+var textSetting = null
+var active = false
+
+enum NarrationType {WRITE=1, CONTINUE=2}
+
+signal dialogueDone # for when the dialogue is finished in narrator and we can continue
+signal exited # for when the narration box is out of the scene
+signal boxOpened # for after the box has opened, we want to signal so we can know when to start our delay timer in the normal logic
+signal boxClosed # we want to wait for the box to close before we continue on with the logic (unless we are exiting both boxes)
+
+
+
+func _ready():
+
+	textAni = get_node(\"../../CanvasLayer2/BottomBar/AnimationPlayer\")
+	
+
+
+	currDialogue = [\"\", {}]
+	dynamicFont.size = 16			# Size of our font	
+	dynamicFont.font_data = font	# The font we established at the top
+	
+	get_node(\"../../..\").connect(\"increaseNarrationText\", self, \"_on_Iterate\")
+
+	get_node(\"../../..\").connect(\"closeNarration\", self, \"_on_Exiting\")
+	get_node(\"../../..\").connect(\"openNarration\", self, \"_on_Opening\")
+	
+
+func _on_Iterate(value, allChars):
+	visibleText += value
+	visibleText = clamp(visibleText, 0, allCharacters)
+	
+	if (visibleText >= allCharacters):
+		emit_signal(\"dialogueDone\")
+
+	
+func _on_Exiting():
+	removeText()
+	get_node(\"../../CanvasLayer2/BottomBar/AnimationPlayer\").play(\"leavingFrame\")
+
+func _process(delta):
+	if (active):
+		updateTextLogic(delta)
+		update()
+	
+	
+func updateTextLogic(delta):
+	
+	drawAmp = currDialogue[1][\"settings\"][currentMarker].amp if currDialogue[1][\"settings\"][currentMarker].has(\"amp\") else 0
+	piAmount = currDialogue[1][\"settings\"][currentMarker].pi if currDialogue[1][\"settings\"][currentMarker].has(\"pi\") else 1
+	waveSpeed = currDialogue[1][\"settings\"][currentMarker].wave if currDialogue[1][\"settings\"][currentMarker].has(\"wave\") else 0
+	
+	waveModulator += delta	# it needs to be added to every frame so that it doesn't reset to the beginning
+	while (waveModulator > 200): #200 is arbitrary, just a decently big number that keeps overflow from happening
+		waveModulator = 0
+
+	
+	# initial pi is 8, giving it  a smooth wavyness, make it 0 for dancing letters
+	#piAmount = currDialogue[1].pi if currDialogue[1].has(\"pi\") else DEF_PI
+		
+
+
+
+
+func _draw():
+
+	# THIS IS WHERE OUR STUFF TO CHANGE WHERE THE PAUSED WOULD HAPPEN, have
+	# it based on numbers for specified ones, have it based on punctuation
+	# characters when nothing is speciffied. We'll need the variable
+	# that holds the current dialogue text and put the visibleText-1 in for
+	# array index.
+	var textBreak = 0
+	var backToBeginning = 0	# used along with textBreak to give a new line
+	# we declare and initialize these variables that will be menipulated in the for loop
+	var drawColor = Color(1, 1, 1)	
+	# gets all of the text, first from the previous text if it's continued,
+	# and then from our current dialogue
+	var drawText = \"\"
+	var choicePosition = Vector2(0,0)
+	var questionNumber = Vector2(0, 0)
+	
+	# we do this now so we don't need to do this check for every single i
+	# in the for loop, determines where on the screen the text should show up
+	# based on how many choices there are on the screen.
+	if (currChoices.size() == 3):
+		questionNumber = Vector2(200, -80) + QUESTION_BOX_POSITION
+	elif (currChoices.size() == 2):
+		questionNumber = Vector2(200, -63) + QUESTION_BOX_POSITION
+
+	drawText += currDialogue[0].c_unescape()
+	
+	# used so that our colors don't effect the colors of the choices
+	var beforeChoices = drawText.length()
+	if (linkPath):
+		# our first new line after our questions
+		drawText += '\\n'
+		# tab for space, our choice, and then another newline
+		for i in range(currChoices.size()):
+			drawText += '\\t' + currChoices[i] + '\\n'
+	globalDrawText = drawText
+
+	var textSpace = 0
+
+	numOfNewLines = 0
+	var markIter = 0
+	var markers = currDialogue[1][\"settings\"] if currDialogue[1].has(\"settings\") else {}
+	for i in range(visibleText):
+			
+		if (markIter != markers.size()-1):
+			if (i >= markers[markIter+1][\"mark\"]):
+				markIter += 1
+				
+		var waveSpeed = markers[markIter][\"wave\"] if markers[markIter].has(\"wave\") else 0
+		var charWaveSpeed = waveSpeed * waveModulator
+		while (charWaveSpeed > PI*2):
+			charWaveSpeed -= PI*2
+				
+		# backToBeginning is basically i, only thing making it different 
+		# is that it resets to 0 when the new line happens
+		backToBeginning += 1
+
+
+		
+		# For the choices, we use a white color and different coordinates so they
+		# fit in the box
+		if (i > beforeChoices):
+			drawAmp = 0
+			drawColor = Color(1, 1, 1)
+			choicePosition = questionNumber	#position based on amount of choices
+				
+				
+		
+			
+		# If certain characters are being drawn that are thinner, we 
+		# subtrack a given amount in pixels from the location on the x-axis
+		# the next characters will be
+		if (i > 0):
+			# i, l, and ' are very short, so we subtrack 4 pixels from following letters
+			if (drawText[i-1] == 'i' || drawText[i-1] == 'l' || drawText[i-1] == '\\'' || drawText[i-1] == 'í' || drawText[i-1] == '\\\"' || drawText[i-1] == '!' || drawText[i-1] == '.' || drawText[i-1] == ',' || drawText[i-1] == ';' || drawText[i-1] == '¡'):
+				textSpace += 4
+			# w and m are very big, so we add 1 pixel to the following letters
+			elif (drawText[i-1] == 'w' || drawText[i-1] == 'm' || drawText[i-1] == 'M' || drawText[i-1] == 'W' || drawText[i-1] == 'O'):
+				textSpace -= 2
+				
+			elif (drawText[i-1] == 'r' || drawText[i-1] == \"j\" || drawText[i-1] == ' '):
+				textSpace += 1	
+				
+			# NEW, add this to the in game script too
+			elif (drawText[i-1] == '('):
+				textSpace += 3
+			
+		# Since new line doesn't happen automatically, gotta do it ourselves
+		if (drawText[i] == '\\n'):
+			numOfNewLines += 1 
+			textBreak += 12
+			backToBeginning = 0
+			textSpace = 0	# since it's a new line we can reset our text spacing
+
+			
+		
+		# Just PI makes the text dance
+		var letterWidth
+		var markAmp = markers[markIter][\"amp\"] if markers[markIter].has(\"amp\") else 0
+		var markPi = markers[markIter][\"pi\"] if markers[markIter].has(\"pi\") else 1
+		letterWidth = draw_char(dynamicFont, 
+			Vector2(backToBeginning * (dynamicFont.size * 0.375) - textSpace + choicePosition.x,		# the font size keeps the spacing consistent for if you change the font size, back to beginning makes it so that when a break happens it goes back to the first x value
+			markAmp * sin(i * PI/markPi + charWaveSpeed) + textBreak + choicePosition.y), # classic sin wave to do the waves, textBreak brings it down once \\n happens
+			drawText[i],	# Character drawn
+			\"a\",	# Not sure what this does, but \"a\" seems to work just fine
+			markers[markIter][\"color\"] if markers[markIter].has(\"color\") else Color(\"ffffff\"))		# The color of the character
+
+
+
+
+# Play the next page of text
+func updateText(textData, page):
+	removeText()
+	currDialogue = page
+	active = true
+	allCharacters = currDialogue[0].c_unescape().length()
+	
+	if (currDialogue[1].has(\"special\")):
+		self.rect_position = Vector2(15, verticalLocSpecial)
+	else:
+		self.rect_position = Vector2(15, verticalLoc)
+	#get_node(\"textScroller\").start()
+	
+	
+func removeText():
+	visibleText = 0
+
+# removes the text and close the box
+func closeBox():
+	removeText()
+	get_node(\"../../CanvasLayer2/BottomBar/AnimationPlayer\").play(\"leavingFrame\")
+	
+
+
+	
+
+func newText(textData, page):
+	dialogueSet = page
+	# opens our json file for reading
+
+	pageText = textData
+
+	
+	# the textpath is where we want our dialogue starting, the [\"data\"] and [\"content\"] 
+	# just need to be there to get us to where we need, allowing us to just use
+	# currDialogue[0] for the dialogue and currDialogue[1] for all it's properties
+	currDialogue = page
+	active = true
+	allCharacters = currDialogue[0].c_unescape().length()
+	print(\"allChars:\", allCharacters)
+	
+	# when this is done we will read from comingIntoFrame to start the timer
+	get_node(\"../../CanvasLayer2/BottomBar/AnimationPlayer\").play(\"comingInFrame\")
+	
+	if (currDialogue[1].has(\"special\")):
+		self.rect_position = Vector2(15, verticalLocSpecial)
+	else:
+		self.rect_position = Vector2(15, verticalLoc)
+		
+
+
+#func _on_Timer_timeout():
+#
+#	var markerChange = false
+#	# for when we want to update the marker, we have to make sure we can skip one
+#	# if for instance, we have a 1 character marker but are jumping by 3 characters
+#	if (currDialogue[1][\"settings\"].size() > 1):
+#		while (currentMarker < currDialogue[1][\"settings\"].size()-1 && visibleText >= currDialogue[1][\"settings\"][currentMarker+1].mark):
+#			currentMarker += 1
+#			markerChange = true
+#
+#
+#	# if there is a new marker, this will be overwritten by the pause
+#	get_node(\"textScroller\").wait_time = currDialogue[1][\"settings\"][currentMarker].speed if currDialogue[1][\"settings\"][currentMarker].has(\"speed\") else 0.01
+#
+#
+#	visibleText += currDialogue[1].skipBy if currDialogue[1].has(\"skipBy\") else DEF_SKIP_BY
+#
+#
+#
+#
+#	# Eventually get this to just stop the timer all together
+#	if (visibleText >= allCharacters):
+#		#print(true)
+#		visibleText = allCharacters
+#		#get_node(\"textScroller\").stop()
+#
+#
+#	# if there is no space
+#	if (globalDrawText[visibleText-1] != \" \" && ((visibleText) % 6 == 0)):
+#
+#
+#		# this successfully changes our sound for the text, this might be worth
+#		# calling when the currdialogue changes for optimization, but for now it works
+#		# fine
+#		var audioSource = null
+#		if (currDialogue[1].has(\"sound\")):
+#			audioSource = load(\"res://Sound/SFX/Text Box/\" + currDialogue[1].sound + \".wav\")
+#
+#		get_node(\"AudioStreamPlayer\").stream = audioSource
+#		if (!get_node(\"AudioStreamPlayer\").playing):	
+#			get_node(\"AudioStreamPlayer\").play(0.0)
+#
+
+	
+
+
+func endPremature():
+	#get_node(\"textScroller\").stop()
+	visibleText = 0
+	prematureEnd = true
+	if (currDialogue[1].open == \"left\"):
+		textAni.play(\"leavingFrameLeft\")
+	elif (currDialogue[1].open == \"right\"):
+		textAni.play(\"leavingFrameRight\")
+	else:
+		textAni.play(\"leavingFrame\")
+	
+
+func loadPortrait():
+	if (currDialogue[1].has(\"face\")):
+		var portaitPath = \"res://Sprites/General/Dialogue/Portraits/\"
+		portaitPath += currDialogue[1].face + \".png\"
+		
+		get_node(\"../../CanvasLayer2/Character\").texture = load(portaitPath)
+	
+	else:
+		get_node(\"../../CanvasLayer2/Character\").texture = null
+		
+# this is for when characters slide in from interupts or continues, doesn't
+# change the name until the namebox is hidden in the section of animation
+func changeName():
+	nameBoxNode.text = currDialogue[1].name if currDialogue[1].has(\"name\") else \" \"	
+
+func comingIntoFrame():
+	# starts timer
+	emit_signal(\"boxOpened\")
+	#get_node(\"textScroller\").start()
+
+	
+func leavingFrame():
+	
+	emit_signal(\"exited\")
+	
+func getCurrentDialogue():
+	return currDialogue[0].c_unescape()
+	
+func getAllChars():
+	return allCharacters
+	
+	
+func exitAni():
+	# if we our current dialogue and the one we are diverting to both have
+	# name, then we compare the name to figure out if it is the same one or not
+	if (currDialogue[1].has(\"name\") && pageText[\"data\"][dialogueSet][currDialogue[1][\"divert\"]][\"content\"][1].has(\"name\")):
+
+		if (currDialogue[1].name == pageText[\"data\"][dialogueSet][currDialogue[1][\"divert\"]][\"content\"][1].name):
+			# do all the stuff we normally do in our leavingFrame function
+			sameName = true
+
+			# if we use the same face, no need to play any animations.
+			if (currDialogue[1].face == pageText[\"data\"][dialogueSet][currDialogue[1][\"divert\"]][\"content\"][1].face):
+				textAni.play(\"JustDelay\")
+				sameFace = true
+
+			else:
+				textAni.play(\"CharLeaving\")
+			
+		# both have a name but not the same character
+		else:
+			# so put them both back
+			textAni.play(\"CharAndBoxLeaving\")
+	# Either of them don't have a name.
+	else:
+		# we don't want to be putting name back if we don't even have a name
+		# on screen, so if we do have a name on our next one, let's get rid 
+		# of the ones on there now.
+		if (!pageText[\"data\"][dialogueSet][currDialogue[1][\"divert\"]][\"content\"][1].has(\"name\")):
+			textAni.play(\"CharAndBoxLeaving\")
+		# the only way this should ever be triggered is if both the current box
+		# and next box don't have names.
+		else:
+			textAni.play(\"JustDelay\")
+
+"
+
+[sub_resource type="DynamicFont" id=2]
+font_data = ExtResource( 3 )
+
+[sub_resource type="Animation" id=3]
+length = 0.2
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = false
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, 224 ), Vector2( 168, 224 ), Vector2( 504, 224 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0.2 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "leavingFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 4, 1 ),
+"update": 0,
+"values": [ Vector2( 256, 112 ), Vector2( 256, 112 ), Vector2( 416, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = false
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.06 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 52, 185 ), Vector2( -65, 185 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("../TopBar:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = false
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, -22 ), Vector2( 168, -22 ), Vector2( -168, -22 ) ]
+}
+
+[sub_resource type="Animation" id=4]
+length = 0.2
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = false
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, 256 ), Vector2( 168, 224 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0.2 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "leavingFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../TopBar:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = false
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, -32 ), Vector2( 168, -22 ) ]
+}
+
+[sub_resource type="Animation" id=5]
+length = 0.2
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = false
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 504, 192 ), Vector2( 168, 192 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"values": [ {
+"args": [  ],
+"method": "loadPortrait"
+}, {
+"args": [  ],
+"method": "changeName"
+}, {
+"args": [  ],
+"method": "comingIntoFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 0.25, 1 ),
+"update": 0,
+"values": [ Vector2( 416, 112 ), Vector2( 416, 112 ), Vector2( 256, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0.06, 0.12 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( -65, 185 ), Vector2( 52, 185 ) ]
+}
+
+[sub_resource type="Animation" id=6]
+length = 0.2
+step = 0.02
+tracks/0/type = "method"
+tracks/0/path = NodePath("../../CanvasLayer/Label")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"values": [ {
+"args": [  ],
+"method": "loadPortrait"
+}, {
+"args": [  ],
+"method": "comingIntoFrame"
+} ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../TopBar:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, -32 ), Vector2( 168, 0 ) ]
+}
+
+[sub_resource type="Animation" id=7]
+length = 0.2
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.12 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 504, 224 ), Vector2( 168, 224 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"values": [ {
+"args": [  ],
+"method": "loadPortrait"
+}, {
+"args": [  ],
+"method": "comingIntoFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 0.25, 1 ),
+"update": 0,
+"values": [ Vector2( 416, 112 ), Vector2( 416, 112 ), Vector2( 256, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.12, 0.16 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( -65, 185 ), Vector2( -65, 185 ), Vector2( 52, 185 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("../TopBar:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.12 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( -168, -22 ), Vector2( 168, -22 ) ]
+}
+
+[sub_resource type="Animation" id=8]
+length = 0.2
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = false
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 504, 192 ), Vector2( 168, 192 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"values": [ {
+"args": [  ],
+"method": "loadPortrait"
+}, {
+"args": [  ],
+"method": "comingIntoFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 0.25, 1 ),
+"update": 0,
+"values": [ Vector2( 416, 112 ), Vector2( 416, 112 ), Vector2( 256, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = false
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 52, 153 ) ]
+}
+
+[sub_resource type="Animation" id=9]
+length = 0.2
+step = 0.02
+tracks/0/type = "method"
+tracks/0/path = NodePath("../../CanvasLayer/Label")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0.2 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "leavingFrame"
+} ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("../TopBar:position")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.2 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, 0 ), Vector2( 168, -32 ) ]
+}
+
+[sub_resource type="Animation" id=10]
+length = 0.2
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, 224 ), Vector2( 168, 224 ), Vector2( 504, 224 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0.2 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "leavingFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 4, 1 ),
+"update": 0,
+"values": [ Vector2( 256, 112 ), Vector2( 256, 112 ), Vector2( 416, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.06 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 52, 185 ), Vector2( -65, 185 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("../TopBar:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.06, 0.2 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 168, -22 ), Vector2( 168, -22 ), Vector2( -168, -22 ) ]
+}
+
+[sub_resource type="Animation" id=11]
+length = 0.5
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = false
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 504, 224 ), Vector2( 168, 224 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.16 ),
+"transitions": PoolRealArray( 1, 1 ),
+"values": [ {
+"args": [  ],
+"method": "loadPortrait"
+}, {
+"args": [  ],
+"method": "comingIntoFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.04, 0.12, 0.14, 0.16, 0.18, 0.2, 0.22, 0.24, 0.26, 0.28, 0.3, 0.32, 0.34, 0.36, 0.38, 0.4, 0.42, 0.44, 0.46, 0.48 ),
+"transitions": PoolRealArray( 1, 0.25, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 416, 112 ), Vector2( 416, 112 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.08, 0.14 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( -65, 185 ), Vector2( -65, 185 ), Vector2( 52, 185 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("../TopBar:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = false
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( -168, -22 ), Vector2( 168, -22 ) ]
+}
+
+[sub_resource type="Animation" id=12]
+length = 0.5
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 504, 224 ), Vector2( 168, 224 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.16 ),
+"transitions": PoolRealArray( 1, 1 ),
+"values": [ {
+"args": [  ],
+"method": "loadPortrait"
+}, {
+"args": [  ],
+"method": "comingIntoFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.04, 0.12, 0.14, 0.16, 0.18, 0.2, 0.22, 0.24, 0.26, 0.28, 0.3, 0.32, 0.34, 0.36, 0.38, 0.4, 0.42, 0.44, 0.46, 0.48 ),
+"transitions": PoolRealArray( 1, 0.25, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 416, 112 ), Vector2( 416, 112 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.08, 0.14 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( -65, 185 ), Vector2( -65, 185 ), Vector2( 52, 185 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("../TopBar:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( -168, -22 ), Vector2( 168, -22 ) ]
+}
+
+[sub_resource type="Animation" id=13]
+length = 0.5
+step = 0.02
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:position")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = false
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 504, 224 ), Vector2( 168, 224 ) ]
+}
+tracks/1/type = "method"
+tracks/1/path = NodePath("../../CanvasLayer/Label")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.16 ),
+"transitions": PoolRealArray( 1, 1 ),
+"values": [ {
+"args": [  ],
+"method": "loadPortrait"
+}, {
+"args": [  ],
+"method": "comingIntoFrame"
+} ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("../Character:position")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.04, 0.12, 0.14, 0.16, 0.18, 0.2, 0.22, 0.24, 0.26, 0.28, 0.3, 0.32, 0.34, 0.36, 0.38, 0.4, 0.42, 0.44, 0.46, 0.48 ),
+"transitions": PoolRealArray( 1, 0.25, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 416, 112 ), Vector2( 416, 112 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ), Vector2( 255, 113 ), Vector2( 256, 114 ), Vector2( 256, 112 ) ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("../NameBox:position")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = false
+tracks/3/keys = {
+"times": PoolRealArray( 0, 0.08, 0.14 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( -65, 185 ), Vector2( -65, 185 ), Vector2( 52, 185 ) ]
+}
+tracks/4/type = "value"
+tracks/4/path = NodePath("../TopBar:position")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/imported = false
+tracks/4/enabled = false
+tracks/4/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( -168, -22 ), Vector2( 168, -22 ) ]
+}
+
+[node name="Control" type="CanvasLayer"]
+layer = 3
+scale = Vector2( 1, 0 )
+transform = Transform2D( 1, 0, 0, 0, 0, 0 )
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+layer = 4
+
+[node name="Label" type="Label" parent="CanvasLayer"]
+margin_left = 15.0
+margin_top = 205.0
+margin_right = 266.0
+margin_bottom = 381.0
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="textScroller" type="Timer" parent="CanvasLayer/Label"]
+wait_time = 0.1
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="CanvasLayer/Label"]
+volume_db = -15.0
+mix_target = 2
+
+[node name="CanvasLayer2" type="CanvasLayer" parent="."]
+layer = 3
+
+[node name="NameBox" type="Sprite" parent="CanvasLayer2"]
+position = Vector2( -65, 185 )
+
+[node name="Name" type="Label" parent="CanvasLayer2/NameBox"]
+margin_left = -52.0
+margin_top = -8.0
+margin_right = 51.0
+margin_bottom = 19.0
+focus_mode = 2
+mouse_filter = 0
+size_flags_vertical = 1
+custom_fonts/font = SubResource( 2 )
+text = "Joshua"
+align = 1
+
+[node name="BottomBar" type="Sprite" parent="CanvasLayer2"]
+position = Vector2( 504, 224 )
+z_index = 4
+texture = ExtResource( 4 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="CanvasLayer2/BottomBar"]
+playback_process_mode = 0
+anims/CharLeaving = SubResource( 3 )
+anims/JustDelay = SubResource( 4 )
+anims/characterSlideRight = SubResource( 5 )
+anims/comingInFrame = SubResource( 6 )
+anims/comingInFrameRight = SubResource( 7 )
+anims/justCharacterSlideRight = SubResource( 8 )
+anims/leavingFrame = SubResource( 9 )
+anims/leavingFrameRight = SubResource( 10 )
+anims/shockCharacterSlideRight = SubResource( 11 )
+anims/shockComingInFrameRight = SubResource( 12 )
+anims/shockJustCharacterSlideRight = SubResource( 13 )
+
+[node name="TopBar" type="Sprite" parent="CanvasLayer2"]
+position = Vector2( 168, -32 )
+z_index = 4
+texture = ExtResource( 4 )
+
+[node name="Character 2" type="Sprite" parent="CanvasLayer2"]
+position = Vector2( -80, 80 )
+
+[node name="Character" type="Sprite" parent="CanvasLayer2"]
+position = Vector2( 416, 112 )
+[connection signal="timeout" from="CanvasLayer/Label/textScroller" to="CanvasLayer/Label" method="_on_Timer_timeout"]

@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/test_effect.wav-cf74974628f42142c3f614a78d38f17d.sample"
+
+[deps]
+
+source_file="res://Text Box Preview/SFX/Text Box/Beeps/test_effect.wav"
+dest_files=[ "res://.import/test_effect.wav-cf74974628f42142c3f614a78d38f17d.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=true
+edit/loop=false
+compress/mode=0

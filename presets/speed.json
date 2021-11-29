@@ -1,0 +1,55 @@
+[
+	{
+		"name": "Ash",
+		"speed": 0.02,
+		"chars": 1,
+		"sound": "test3"
+	},
+	{
+		"name": "Josh",
+		"speed": 0.03,
+		"chars": 1,
+		"sound": "test4"
+	},
+	{
+		"name": "Jason",
+		"speed": 0.01,
+		"chars": 3,
+		"sound": "test"
+	},
+	{
+		"name": "slowww",
+		"speed": 0.29,
+		"chars": 1,
+		"sound": "test",
+		"arrTest": [
+			3,
+			5,
+			7
+		]
+	},
+	{
+		"name": "ahhhhh",
+		"speed": 0.5,
+		"chars": 5,
+		"sound": "test4"
+	},
+	{
+		"name": "newChar",
+		"speed": 0.04,
+		"chars": 1,
+		"sound": "test4"
+	},
+	{
+		"name": "Preset Test",
+		"speed": 0.03,
+		"chars": 5,
+		"sound": "test4"
+	},
+	{
+		"name": "default",
+		"speed": 0.01,
+		"chars": 1,
+		"sound": "02_fluttery"
+	}
+]

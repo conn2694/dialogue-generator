@@ -1,0 +1,50 @@
+[
+	{
+		"name": "wire",
+		"amp": 2,
+		"wave": 0.5,
+		"pi": 8
+	},
+	{
+		"name": "jason",
+		"amp": 1,
+		"wave": 1.5,
+		"pi": 4
+	},
+	{
+		"name": "test",
+		"amp": 5.5,
+		"wave": 0,
+		"pi": 0
+	},
+	{
+		"name": "alien",
+		"amp": 5,
+		"wave": 3,
+		"pi": 9.26
+	},
+	{
+		"name": "wahh",
+		"amp": 0,
+		"wave": 0,
+		"pi": 1
+	},
+	{
+		"name": "nooo",
+		"amp": 0,
+		"wave": 0,
+		"pi": 16
+	},
+	{
+		"name": "scared",
+		"amp": 0.55,
+		"wave": 100,
+		"pi": 8.99
+	},
+	{
+		"name": "dsjfk",
+		"amp": 1.75,
+		"wave": 37.5,
+		"pi": 12.84
+	}
+]
